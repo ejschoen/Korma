@@ -2,6 +2,7 @@
   "Core querying and entity functions"
   (:refer-clojure :exclude [update])
   (:require [clojure.set :as set]
+            [clojure.pprint]
             [clojure.string :as string]
             [korma.config :as conf]
             [korma.db :as db]
@@ -296,7 +297,12 @@
                                              values)))
 
 (defn join* [query type table clause]
-  (update-in query [:joins] conj [type table clause]))
+  (update-in query [:joins] conj
+             [type
+              (if (and (vector? table) (utils/sub-query? (first table)))
+                (assoc-in (first table) [:korma.sql.utils/sub :alias] (second table))
+                table)
+              clause]))
 
 (defn add-joins
   ([query ent rel]

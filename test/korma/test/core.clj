@@ -278,6 +278,11 @@
           (select user2
                   (join :inner address))))))
 
+(deftest left-join-with-alias-query
+  (sql-only
+   (is (= "SELECT \"users\".* FROM \"users\" LEFT JOIN (SELECT \"address\".\"users_id\" FROM \"address\") AS \"address_users\" ON \"users\".\"id\" = \"address_users\".\"users_id\""
+          (select user2 (join :left [(subselect address (fields :users_id)) :address_users] (= :users.id :address_users.users_id)))))))
+
 (deftest new-with
   (sql-only
    (are [result query] (= result query)
@@ -703,6 +708,27 @@
                                                                (where {:b 2
                                                                        :c 3})))
                                            (order :a)))))))
+
+(deftest test-limit-in-union
+  (is (= "dry run :: (SELECT \"users\".* FROM \"users\" WHERE (\"users\".\"a\" = ?)) UNION (SELECT \"state\".* FROM \"state\" WHERE (\"state\".\"b\" = ? AND \"state\".\"c\" = ?)) LIMIT 1 OFFSET 2 :: [1 2 3]\n"
+         (with-out-str (dry-run (union (queries (subselect users (where {:a 1}))
+                                                (subselect state (where {:b 2
+                                                                         :c 3})))
+                                           (limit 1) (offset 2)))))))
+
+(deftest test-limit-in-union-all
+  (is (= "dry run :: (SELECT \"users\".* FROM \"users\" WHERE (\"users\".\"a\" = ?)) UNION ALL (SELECT \"state\".* FROM \"state\" WHERE (\"state\".\"b\" = ? AND \"state\".\"c\" = ?)) LIMIT 1 OFFSET 2 :: [1 2 3]\n"
+         (with-out-str (dry-run (union-all (queries (subselect users (where {:a 1}))
+                                                    (subselect state (where {:b 2
+                                                                             :c 3})))
+                                           (limit 1) (offset 2)))))))
+
+(deftest test-limit-in-intersection
+  (is (= "dry run :: (SELECT \"users\".* FROM \"users\" WHERE (\"users\".\"a\" = ?)) INTERSECT (SELECT \"state\".* FROM \"state\" WHERE (\"state\".\"b\" = ? AND \"state\".\"c\" = ?)) LIMIT 1 OFFSET 2 :: [1 2 3]\n"
+         (with-out-str (dry-run (intersect (queries (subselect users (where {:a 1}))
+                                                    (subselect state (where {:b 2
+                                                                             :c 3})))
+                                           (limit 1) (offset 2)))))))
 
 ;;*****************************************************
 ;; Transformers for one-to-one relations
