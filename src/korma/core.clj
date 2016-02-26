@@ -323,7 +323,10 @@
   (join query addresses)
   (join query :right addresses)
   (join query addresses (= :addres.users_id :users.id))
-  (join query :right addresses (= :address.users_id :users.id))"
+  (join query :right addresses (= :address.users_id :users.id))
+
+  (join query [addresses alias]) is supported for join queries against a subselect 
+  that must have an aliased name."
   {:arglists '([query ent] [query type ent] [query table clause] [query type table clause])}
   ([query ent]
      `(join ~query :left ~ent))
