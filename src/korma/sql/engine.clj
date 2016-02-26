@@ -265,8 +265,9 @@
 
 (defn join-clause [join-type table on-clause]
   (let [join-type (string/upper-case (name join-type))
+        table-alias (and (utils/sub-query? table) (:alias (utils/sub-query? table)))
         table (from-table table)
-        join (str " " join-type " JOIN " table " ON ")]
+        join (str " " join-type " JOIN " table (if table-alias (alias-clause table-alias) "") " ON ")]
     (str join (str-value on-clause))))
 
 (defn insert-values-clause [ks vs]
@@ -388,9 +389,9 @@
 (defn ->sql [query]
   (bind-params
    (case (:type query)
-     :union (-> query sql-union sql-order)
-     :union-all (-> query sql-union-all sql-order)
-     :intersect (-> query sql-intersect sql-order)
+     :union (-> query sql-union sql-order sql-limit-offset)
+     :union-all (-> query sql-union-all sql-order sql-limit-offset)
+     :intersect (-> query sql-intersect sql-order sql-limit-offset)
      :select (-> query
                  sql-select
                  sql-joins
