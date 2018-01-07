@@ -22,7 +22,8 @@
                  [org.clojure/java.jdbc "0.3.7"]]
 
   :min-lein-version "2.0.0"
-
+  :omit-source true
+  :aot :all
   :profiles {:dev {:dependencies [[gui-diff "0.6.6"]
                                   [postgresql "9.3-1102.jdbc41"]
                                   [slamhound "1.5.5"]
