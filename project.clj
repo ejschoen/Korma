@@ -1,4 +1,4 @@
-(defproject korma "0.4.4"
+(defproject korma "0.4.5"
   :description "Tasty SQL for Clojure"
   :url "http://github.com/korma/Korma"
   :repositories ^:replace [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release"
@@ -17,7 +17,7 @@
           :src-dir-uri "https://github.com/korma/Korma/blob/master/"
           :src-linenum-anchor-prefix "L"}
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [c3p0/c3p0 "0.9.1.2"]
                  [org.clojure/java.jdbc "0.3.7"]]
 
