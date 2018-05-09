@@ -2,6 +2,7 @@
   "Core querying and entity functions"
   (:refer-clojure :exclude [update])
   (:require [clojure.set :as set]
+            [clojure.pprint]
             [clojure.string :as string]
             [korma.db :as db]
             [korma.sql.engine :as eng]
@@ -294,7 +295,12 @@
                                              values)))
 
 (defn join* [query type table clause]
-  (update-in query [:joins] conj [type table clause]))
+  (update-in query [:joins] conj
+             [type
+              (if (and (vector? table) (utils/sub-query? (first table)))
+                (assoc-in (first table) [:korma.sql.utils/sub :alias] (second table))
+                table)
+              clause]))
 
 (defn add-joins
   ([query ent rel]
@@ -325,7 +331,10 @@
   (join query addresses)
   (join query :right addresses)
   (join query addresses (= :addres.users_id :users.id))
-  (join query :right addresses (= :address.users_id :users.id))"
+  (join query :right addresses (= :address.users_id :users.id))
+
+  (join query [addresses alias]) is supported for join queries against a subselect 
+  that must have an aliased name."
   {:arglists '([query ent] [query type ent] [query table clause] [query type table clause])}
   ([query ent]
    `(join ~query :left ~ent))
@@ -360,6 +369,11 @@
   "Add a group-by clause to a select query"
   [query & fields]
   (update-in query [:group] utils/vconcat fields))
+
+(defn add-comment
+  "Add a comment clause to a select query"
+  [query comment-str]
+  (update-in query [:comments] utils/vconcat [comment-str]))
 
 (defmacro aggregate
   "Use a SQL aggregator function, aliasing the results, and optionally grouping by

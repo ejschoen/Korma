@@ -270,8 +270,9 @@
 
 (defn join-clause [join-type table on-clause]
   (let [join-type (string/upper-case (name join-type))
+        table-alias (and (utils/sub-query? table) (:alias (utils/sub-query? table)))
         table (from-table table)
-        join (str " " join-type " JOIN " table " ON ")]
+        join (str " " join-type " JOIN " table (if table-alias (alias-clause table-alias) "") " ON ")]
     (str join (str-value on-clause))))
 
 (defn insert-values-clause [ks vs]
@@ -282,20 +283,31 @@
 ;; Query types
 ;;*****************************************************
 
+(defn- make-comment [query]
+  (if (seq (:comments query))
+    (->> query
+         :comments
+         (map (fn [cmt]
+                (str "-- "
+                     (string/join "\n-- " (string/split cmt #"\n"))
+                     "\n")))
+         (apply str))
+    ""))
+
 (defn sql-select [query]
   (let [clauses (map field-str (:fields query))
         modifiers-clause (when (seq (:modifiers query))
                            (str (reduce str (:modifiers query)) " "))
         clauses-str (utils/comma-separated clauses)
-        neue-sql (str "SELECT " modifiers-clause clauses-str)]
+        neue-sql (str (make-comment query) "SELECT " modifiers-clause clauses-str)]
     (assoc query :sql-str neue-sql)))
 
 (defn sql-update [query]
-  (let [neue-sql (str "UPDATE " (table-str query))]
+  (let [neue-sql (str (make-comment query) "UPDATE " (table-str query))]
     (assoc query :sql-str neue-sql)))
 
 (defn sql-delete [query]
-  (let [neue-sql (str "DELETE FROM " (table-str query))]
+  (let [neue-sql (str (make-comment query) "DELETE FROM " (table-str query))]
     (assoc query :sql-str neue-sql)))
 
 (def noop-query "DO 0")
@@ -308,7 +320,7 @@
         neue-sql (if-not (empty? ins-keys)
                    (str "INSERT INTO " (table-str query) " " (utils/wrap keys-clause) " VALUES " values-clause)
                    noop-query)]
-    (assoc query :sql-str neue-sql)))
+    (assoc query :sql-str (str (make-comment query) neue-sql))))
 
 ;;*****************************************************
 ;; Sql parts
@@ -374,7 +386,7 @@
 
 (defn- sql-combination-query [type query]
   (let [sub-query-sqls (map map-val (:queries query))
-        neue-sql (string/join (str " " type " ") sub-query-sqls)]
+        neue-sql (str (make-comment query) (string/join (str " " type " ") sub-query-sqls))]
     (assoc query :sql-str neue-sql)))
 
 (def sql-union     (partial sql-combination-query "UNION"))
@@ -393,9 +405,9 @@
 (defn ->sql [query]
   (bind-params
    (case (:type query)
-     :union (-> query sql-union sql-order)
-     :union-all (-> query sql-union-all sql-order)
-     :intersect (-> query sql-intersect sql-order)
+     :union (-> query sql-union sql-order sql-limit-offset)
+     :union-all (-> query sql-union-all sql-order sql-limit-offset)
+     :intersect (-> query sql-intersect sql-order sql-limit-offset)
      :select (-> query
                  sql-select
                  sql-joins

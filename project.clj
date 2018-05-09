@@ -1,6 +1,14 @@
-(defproject korma "0.5.0-SNAPSHOT"
+(defproject korma "0.4.4"
   :description "Tasty SQL for Clojure"
   :url "http://github.com/korma/Korma"
+  :repositories ^:replace [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release"
+                                        :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]
+                           ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot"
+                                         :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]]
+  :deploy-repositories [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release-local"
+                                     :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]
+                        ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot-local"
+                                      :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]]
   :mailing-list {:name "Korma Google Group"
                  :subscribe "https://groups.google.com/group/sqlkorma"}
   :codox {:exclude [korma.sql.engine
@@ -14,7 +22,8 @@
                  [org.clojure/java.jdbc "0.3.7"]]
 
   :min-lein-version "2.0.0"
-
+  :omit-source true
+  :aot :all
   :profiles {:dev {:dependencies [[gui-diff "0.6.6"]
                                   [postgresql "9.3-1102.jdbc41"]
                                   [slamhound "1.5.5"]
