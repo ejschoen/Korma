@@ -1,14 +1,10 @@
 (defproject korma "0.4.5"
   :description "Tasty SQL for Clojure"
   :url "http://github.com/korma/Korma"
-  :repositories ^:replace [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release"
-                                        :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]
-                           ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot"
-                                         :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]]
-  :deploy-repositories [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release-local"
-                                     :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]
-                        ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot-local"
-                                      :username "i2kdev" :password "AP4WKeyKBALnrFLRQcTvgip6zndxT1k2pmqWAu"}]]
+  :repositories ^:replace [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release"}]
+                           ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot"}]]
+  :deploy-repositories [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release-local"}]
+                        ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot-local"}]]
   :mailing-list {:name "Korma Google Group"
                  :subscribe "https://groups.google.com/group/sqlkorma"}
   :codox {:exclude [korma.sql.engine
