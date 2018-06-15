@@ -1,10 +1,6 @@
-(defproject korma "0.4.5"
+(defproject org.clojars.ejschoen/korma "0.4.5"
   :description "Tasty SQL for Clojure"
   :url "http://github.com/korma/Korma"
-  :repositories ^:replace [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release"}]
-                           ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot"}]]
-  :deploy-repositories [["releases" {:url "https://dev.i2kconnect.com/artifactory/libs-release-local"}]
-                        ["snapshots" {:url "https://dev.i2kconnect.com/artifactory/libs-snapshot-local"}]]
   :mailing-list {:name "Korma Google Group"
                  :subscribe "https://groups.google.com/group/sqlkorma"}
   :codox {:exclude [korma.sql.engine
@@ -26,7 +22,8 @@
                                   [criterium "0.4.3"]]
                    :plugins [[codox "0.8.12"]
                              [jonase/eastwood "0.2.1"]
-                             [lein-localrepo "0.5.3"]]}
+                             [lein-localrepo "0.5.3"]
+                             ]}
              :test {:dependencies [[mysql/mysql-connector-java "5.1.35"]
                                    [com.h2database/h2 "1.4.187"]
                                    [criterium "0.4.3"]]}
