@@ -12,6 +12,13 @@
 (def ^{:dynamic true} *bound-aliases* #{})
 (def ^{:dynamic true} *bound-params* nil)
 (def ^{:dynamic true} *bound-options* nil)
+(def ^{:dynamic true} *bound-database* nil)
+
+(defn get-subprotocol
+  []
+  (:subprotocol (db/get-connection *bound-database*)))
+
+
 
 ;;*****************************************************
 ;; delimiters
@@ -21,6 +28,12 @@
   (let [{:keys [naming delimiters]} *bound-options*
         [begin end] delimiters
         ->field (:fields naming)]
+    (when-not begin
+      (throw (Exception. "Missing begin delimiter")))
+    (when-not end
+      (throw (Exception. "Missing end delimiter")))
+    (when-not ->field
+      (throw (Exception. "Missing naming function")))
     (str begin (->field s) end)))
 
 ;;*****************************************************
@@ -143,14 +156,16 @@
 ;;*****************************************************
 
 (defmacro bind-query [query & body]
-  `(binding [*bound-table* (if (= :select (:type ~query))
-                             (table-alias ~query)
-                             (:table ~query))
-             *bound-aliases* (or (:aliases ~query) #{})
-             *bound-options* (or (get-in ~query [:db :options])
-                                 (:options db/*current-db*)
-                                 (:options @db/_default))]
-     ~@body))
+  `(let [db# (or (:db ~query)
+                 db/*current-db*
+                 @db/_default)]
+     (binding [*bound-table* (if (= :select (:type ~query))
+                               (table-alias ~query)
+                               (:table ~query))
+               *bound-aliases* (or (:aliases ~query) #{})
+               *bound-database* db#
+               *bound-options* (:options db#)]
+       ~@body)))
 
 ;;*****************************************************
 ;; Predicates
@@ -294,12 +309,25 @@
          (apply str))
     ""))
 
-(defn sql-select [query]
+(defmulti sql-select (fn [query] (get-subprotocol)))
+
+(defmethod sql-select :default [query]
   (let [clauses (map field-str (:fields query))
         modifiers-clause (when (seq (:modifiers query))
                            (str (reduce str (:modifiers query)) " "))
         clauses-str (utils/comma-separated clauses)
         neue-sql (str (make-comment query) "SELECT " modifiers-clause clauses-str)]
+    (assoc query :sql-str neue-sql)))
+
+(defmethod sql-select "sqlserver" [query]
+  (let [clauses (map field-str (:fields query))
+        top-clause (if (:limit query)
+                     (str "top " (:limit query) " ")
+                     "")
+        modifiers-clause (when (seq (:modifiers query))
+                           (str (reduce str (:modifiers query)) " "))
+        clauses-str (utils/comma-separated clauses)
+        neue-sql (str (make-comment query) "SELECT " top-clause modifiers-clause clauses-str)]
     (assoc query :sql-str neue-sql)))
 
 (defn sql-update [query]
@@ -373,7 +401,11 @@
       (update-in query [:sql-str] str neue-sql))
     query))
 
-(defn sql-limit-offset [{:keys [limit offset] :as query}]
+(defmulti sql-limit-offset (fn [query] (get-subprotocol)))
+
+(defmethod sql-limit-offset "sqlserver" [query] query)
+
+(defmethod sql-limit-offset :default [{:keys [limit offset] :as query}]
   (let [limit-sql (when limit
                     (str " LIMIT " limit))
         offset-sql (when offset
