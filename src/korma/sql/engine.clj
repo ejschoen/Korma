@@ -25,7 +25,9 @@
 ;;*****************************************************
 
 (defn delimit-str [s]
-  (let [{:keys [naming delimiters]} *bound-options*
+  (if (empty? s)
+    s
+    (let [{:keys [naming delimiters]} *bound-options*
         [begin end] delimiters
         ->field (:fields naming)]
     (when-not begin
@@ -34,7 +36,7 @@
       (throw (Exception. "Missing end delimiter")))
     (when-not ->field
       (throw (Exception. "Missing naming function")))
-    (str begin (->field s) end)))
+    (str begin (->field s) end))))
 
 ;;*****************************************************
 ;; Str utils
@@ -322,12 +324,12 @@
 (defmethod sql-select "sqlserver" [query]
   (let [clauses (map field-str (:fields query))
         top-clause (if (:limit query)
-                     (str "top " (:limit query) " ")
+                     (str "top(" (:limit query) ") ")
                      "")
         modifiers-clause (when (seq (:modifiers query))
                            (str (reduce str (:modifiers query)) " "))
         clauses-str (utils/comma-separated clauses)
-        neue-sql (str (make-comment query) "SELECT " top-clause modifiers-clause clauses-str)]
+        neue-sql (str (make-comment query) "SELECT "  modifiers-clause top-clause clauses-str)]
     (assoc query :sql-str neue-sql)))
 
 (defn sql-update [query]
